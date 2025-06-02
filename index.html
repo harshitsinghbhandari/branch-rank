@@ -1,31 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>IIT Branch Finder</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script defer src="script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIT Counseling Helper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: rotate(0deg) translate(-20px, -20px); }
+            50% { transform: rotate(180deg) translate(20px, 20px); }
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .results-content {
+            background: white;
+            border-radius: 0 0 15px 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #e1e5e9;
+        }
+
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .result-item:hover {
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f8ff 100%);
+            transform: translateX(5px);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .institute-name {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .branch-name {
+            color: #4facfe;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .rank-info {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .rank-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #d63031;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>IIT Branch Finder</h1>
-  <form id="rankForm">
-    <label for="rank">Your CRL Rank:</label>
-    <input type="number" id="rank" required><br>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 IIT Counseling Helper</h1>
+            <p>Find your eligible IIT branches based on your rank and preferences</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crlRank">CRL Rank *</label>
+                        <input type="number" id="crlRank" placeholder="Enter your CRL rank" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option value="OPEN">OPEN</option>
+                            <option value="SC">SC</option>
+                            <option value="ST">ST</option>
+                            <option value="OBC">OBC</option>
+                            <option value="EWS">EWS</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rankType">Rank Category Type *</label>
+                        <select id="rankType" required>
+                            <option value="">Select Type</option>
+                            <option value="AI">AI (All India)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="institutePreference">Institute Preferences (Optional)</label>
+                        <input type="text" id="institutePreference" placeholder="e.g., IIT Bombay, IIT Delhi (comma separated)">
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" onclick="findEligibleBranches()">
+                        🔍 Find Eligible Branches
+                    </button>
+                </div>
+            </div>
+            
+            <div id="results" style="display: none;">
+                <div class="stats" id="statsSection" style="display: none;">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalResults">0</div>
+                        <div class="stat-label">Eligible Options</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalInstitutes">0</div>
+                        <div class="stat-label">Institutes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalBranches">0</div>
+                        <div class="stat-label">Unique Branches</div>
+                    </div>
+                </div>
+                
+                <div class="results-section">
+                    <div class="results-header">
+                        <span id="resultsTitle">Your Eligible Options</span>
+                    </div>
+                    <div class="results-content" id="resultsContent">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <label for="category">Category:</label>
-    <select id="category">
-      <option value="OPEN">OPEN</option>
-      <option value="OBC">OBC</option>
-      <option value="SC">SC</option>
-      <option value="ST">ST</option>
-    </select><br>
-
-    <label for="institute">Preferred Institute (optional):</label>
-    <input type="text" id="institute"><br>
-
-    <button type="submit">Find Branches</button>
-  </form>
-
-  <div id="results"></div>
+    <script>
+        let csvData = [];
+        
+        // Load CSV data on page load
+        window.addEventListener('load', loadCSVData);
+        
+        async function loadCSVData() {
+            try {
+                const response = await fetch('data.csv');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const csvText = await response.text();
+                csvData = parseCSV(csvText);
+                console.log('CSV data loaded:', csvData.length, 'entries');
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                showError('Error loading data. Please make sure data.csv is present in the repository.');
+            }
+        }
+        
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+                if (values.length === headers.length) {
+                    const entry = {};
+                    headers.forEach((header, index) => {
+                        entry[header] = values[index];
+                    });
+                    data.push(entry);
+                }
+            }
+            
+            return data;
+        }
+        
+        function findEligibleBranches() {
+            const crlRank = parseInt(document.getElementById('crlRank').value);
+            const category = document.getElementById('category').value;
+            const rankType = document.getElementById('rankType').value;
+            const institutePreference = document.getElementById('institutePreference').value;
+            
+            // Validation
+            if (!crlRank || !category || !rankType) {
+                showError('Please fill in all required fields.');
+                return;
+            }
+            
+            if (csvData.length === 0) {
+                showError('Data not loaded yet. Please wait and try again.');
+                return;
+            }
+            
+            // Show loading
+            showLoading();
+            
+            // Filter data
+            let filteredData = csvData.filter(entry => {
+                const matchesCategory = entry['Category'] === category;
+                const matchesRankType = entry['Rank Category'] === rankType;
+                const closingRank = parseInt(entry['Closing Rank']);
+                const isEligible = closingRank >= crlRank;
+                
+                return matchesCategory && matchesRankType && isEligible;
+            });
+            
+            // Apply institute preference filter if specified
+            if (institutePreference.trim()) {
+                const preferredInstitutes = institutePreference
+                    .split(',')
+                    .map(inst => inst.trim().toLowerCase());
+                    
+                filteredData = filteredData.filter(entry => {
+                    const instituteName = entry['Institute'].toLowerCase();
+                    return preferredInstitutes.some(pref => 
+                        instituteName.includes(pref) || pref.includes(instituteName)
+                    );
+                });
+            }
+            
+            displayResults(filteredData, crlRank, category, rankType);
+        }
+        
+        function displayResults(data, crlRank, category, rankType) {
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            const statsSection = document.getElementById('statsSection');
+            
+            resultsDiv.style.display = 'block';
+            
+            if (data.length === 0) {
+                resultsContent.innerHTML = `
+                    <div class="no-results">
+                        <h3>No eligible options found</h3>
+                        <p>Try adjusting your preferences or check if your rank and category are correct.</p>
+                    </div>
+                `;
+                statsSection.style.display = 'none';
+                return;
+            }
+            
+            // Calculate statistics
+            const uniqueInstitutes = new Set(data.map(entry => entry['Institute'])).size;
+            const uniqueBranches = new Set(data.map(entry => entry['Branch'])).size;
+            
+            document.getElementById('totalResults').textContent = data.length;
+            document.getElementById('totalInstitutes').textContent = uniqueInstitutes;
+            document.getElementById('totalBranches').textContent = uniqueBranches;
+            statsSection.style.display = 'grid';
+            
+            // Sort data by closing rank (ascending)
+            data.sort((a, b) => parseInt(a['Closing Rank']) - parseInt(b['Closing Rank']));
+            
+            let html = '';
+            data.forEach(entry => {
+                const openingRank = parseInt(entry['Opening Rank']);
+                const closingRank = parseInt(entry['Closing Rank']);
+                const gender = entry['Gender'] || 'Not specified';
+                
+                html += `
+                    <div class="result-item">
+                        <div class="institute-name">${entry['Institute']}</div>
+                        <div class="branch-name">${entry['Branch']}</div>
+                        <div class="rank-info">
+                            <span><strong>Opening Rank:</strong> ${openingRank}</span>
+                            <span><strong>Closing Rank:</strong> ${closingRank}</span>
+                            <span class="rank-badge">${gender}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContent.innerHTML = html;
+            
+            // Update results title
+            document.getElementById('resultsTitle').textContent = 
+                `${data.length} Eligible Option${data.length !== 1 ? 's' : ''} Found`;
+        }
+        
+        function showLoading() {
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            resultsDiv.style.display = 'block';
+            document.getElementById('statsSection').style.display = 'none';
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🔍</div>
+                    <div>Searching for eligible branches...</div>
+                </div>
+            `;
+        }
+        
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            const resultsContent = document.getElementById('resultsContent');
+            
+            resultsDiv.style.display = 'block';
+            document.getElementById('statsSection').style.display = 'none';
+            resultsContent.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+        
+        // Add enter key support for the rank input
+        document.getElementById('crlRank').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                findEligibleBranches();
+            }
+        });
+    </script>
 </body>
 </html>
