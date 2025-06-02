@@ -253,6 +253,6 @@ def test_filter():
         
     except Exception as e:
         return jsonify({'error': f'Test error: {str(e)}'})
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5001))  # Render sets this env variable
+    app.run(host='0.0.0.0', port=port)
