@@ -18,7 +18,7 @@ branch-rank/
 ├── templates/
 │   └── index.html      # Frontend interface
 ├── static/
-│   └── data.csv        # Cutoff data (you need to add this)
+│   └── data.csv        # Cutoff data 
 ├── requirements.txt    # Python dependencies
 └── README.md          # This file
 ```
