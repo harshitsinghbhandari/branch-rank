@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIT Admission Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            padding: 40px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .results-count {
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .result-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .institute-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .branch-name {
+            font-size: 1.1em;
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .rank-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .rank-badge {
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .opening-rank {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .closing-rank {
+            background: #fef2e5;
+            color: #f39c12;
+        }
+
+        .rank-diff {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #c62828;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .no-results h3 {
+            margin-bottom: 10px;
+            color: #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .form-section {
+                padding: 20px;
+            }
+            
+            .rank-info {
+                grid-template-columns: 1fr;
+            }
+        }
+        select[multiple] {
+    min-height: 120px;
+    padding: 8px;
+}
+
+select[multiple] option {
+    padding: 5px 8px;
+    margin: 1px 0;
+}
+
+select[multiple] option:checked {
+    background: #3498db;
+    color: white;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 IIT Admission Predictor</h1>
+            <p>Find your eligible IIT branches based on JEE Advanced rank</p>
+        </div>
+
+        <div class="form-section">
+            <!-- Debug Panel
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #17a2b8;">
+                <h4 style="color: #17a2b8; margin-bottom: 10px;">🔧 Debug Panel</h4>
+                <button type="button" onclick="checkData()" style="background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 10px; cursor: pointer;">
+                    Check Data
+                </button>
+                <button type="button" onclick="testFilter()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                    Test Filter
+                </button>
+                <div id="debugOutput" style="margin-top: 10px; padding: 10px; background: white; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; display: none;"></div>
+            </div> -->
+
+            <form id="predictionForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="crlRank">CRL Rank *</label>
+                        <input type="number" id="crlRank" class="form-control" placeholder="Enter your CRL rank" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" class="form-control" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="rankType">Rank Category Type</label>
+                        <select id="rankType" class="form-control">
+                            <option value="AI">AI (All India)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="institutePrefs">Institute Preferences (Optional)</label>
+                        <select id="institutePrefs" class="form-control" multiple>
+                            <option value="">Select Institutes (Hold Ctrl/Cmd for multiple)</option>
+                        </select>
+                        <small style="color: #666; font-size: 0.9em; margin-top: 5px; display: block;">
+                            Hold Ctrl (Windows) or Cmd (Mac) to select multiple institutes
+                        </small>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="btn" id="predictBtn">
+                        🔍 Find Eligible Colleges
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your options...</p>
+            </div>
+        </div>
+
+        <div class="results" id="results">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">0 Options Found</div>
+                <h2>Your Eligible Options</h2>
+            </div>
+            <div id="resultsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load categories and institutes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+        });
+
+        function loadCategories() {
+            fetch('/get_categories')
+                .then(response => response.json())
+                .then(data => {
+                    const categorySelect = document.getElementById('category');
+                    data.categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        categorySelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading categories:', error);
+                });
+        
+        fetch('/get_institutes')
+        .then(response => response.json())
+        .then(data => {
+            const instituteSelect = document.getElementById('institutePrefs');
+            data.institutes.forEach(institute => {
+                const option = document.createElement('option');
+                option.value = institute;
+                option.textContent = institute;
+                instituteSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading institutes:', error);
+        });
+    }
+        // Form submission
+        document.getElementById('predictionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get selected institutes
+const instituteSelect = document.getElementById('institutePrefs');
+const selectedInstitutes = Array.from(instituteSelect.selectedOptions)
+    .map(option => option.value)
+    .filter(value => value !== '') // Remove empty option
+    .join(',');
+
+const formData = {
+    crl_rank: document.getElementById('crlRank').value,
+    category: document.getElementById('category').value,
+    rank_type: document.getElementById('rankType').value,
+    institute_preferences: selectedInstitutes
+};
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('predictBtn').disabled = true;
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+
+                if (data.success) {
+                    displayResults(data.results, data.total_options);
+                } else {
+                    displayError(data.error);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+                displayError('Network error. Please try again.');
+                console.error('Error:', error);
+            });
+        });
+
+        function displayResults(results, totalOptions) {
+            const resultsDiv = document.getElementById('results');
+            const resultsCount = document.getElementById('resultsCount');
+            const resultsList = document.getElementById('resultsList');
+
+            resultsCount.textContent = `${totalOptions} Options Found`;
+            resultsList.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsList.innerHTML = `
+                    <div class="no-results">
+                        <h3>No eligible options found</h3>
+                        <p>Try adjusting your preferences or check if your rank is correct.</p>
+                    </div>
+                `;
+            } else {
+                results.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <div class="result-header">
+                            <div>
+                                <div class="institute-name">${result.institute}</div>
+                                <div class="branch-name">${result.branch}</div>
+                            </div>
+                        </div>
+                        <div class="rank-info">
+                            <div class="rank-badge opening-rank">
+                                Opening: ${result.opening_rank}
+                            </div>
+                            <div class="rank-badge closing-rank">
+                                Closing: ${result.closing_rank}
+                            </div>
+                            <div class="rank-badge rank-diff">
+                                Buffer: ${result.rank_difference} ranks
+                            </div>
+                        </div>
+                    `;
+                    resultsList.appendChild(resultItem);
+                });
+            }
+
+            resultsDiv.classList.add('active');
+        }
+
+        function displayError(errorMessage) {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${errorMessage}
+                </div>
+            `;
+            document.getElementById('results').classList.add('active');
+        }
+        // Debug functions
+        function checkData() {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.style.display = 'block';
+            debugOutput.innerHTML = 'Loading data info...';
+            
+            fetch('/debug')
+                .then(response => response.json())
+                .then(data => {
+                    debugOutput.innerHTML = `
+                        <strong>Data Debug Info:</strong><br>
+                        Total Rows: ${data.total_rows}<br>
+                        Columns: ${data.columns ? data.columns.join(', ') : 'None'}<br>
+                        Categories: ${data.categories ? data.categories.join(', ') : 'None'}<br>
+                        Rank Types: ${data.rank_types ? data.rank_types.join(', ') : 'None'}<br>
+                        Closing Rank Range: ${data.closing_rank_stats ? data.closing_rank_stats.min + ' - ' + data.closing_rank_stats.max : 'N/A'}<br>
+                        <br><strong>Sample Data:</strong><br>
+                        ${JSON.stringify(data.sample_data, null, 2)}
+                    `;
+                })
+                .catch(error => {
+                    debugOutput.innerHTML = `Error: ${error.message}`;
+                });
+        }
+
+        function testFilter() {
+            const debugOutput = document.getElementById('debugOutput');
+            debugOutput.style.display = 'block';
+            debugOutput.innerHTML = 'Testing filter...';
+            
+            fetch('/test_filter')
+                .then(response => response.json())
+                .then(data => {
+                    debugOutput.innerHTML = `
+                        <strong>Filter Test Results:</strong><br>
+                        Test Rank: ${data.test_parameters ? data.test_parameters.rank : 'N/A'}<br>
+                        Test Category: ${data.test_parameters ? data.test_parameters.category : 'N/A'}<br>
+                        Test Rank Type: ${data.test_parameters ? data.test_parameters.rank_type : 'N/A'}<br>
+                        Results Found: ${data.results_found || 0}<br>
+                        <br><strong>Sample Results:</strong><br>
+                        ${JSON.stringify(data.sample_results, null, 2)}
+                    `;
+                })
+                .catch(error => {
+                    debugOutput.innerHTML = `Error: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>
