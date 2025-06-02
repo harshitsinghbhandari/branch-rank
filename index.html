@@ -385,21 +385,70 @@
         
         function parseCSV(csvText) {
             const lines = csvText.trim().split('\n');
-            const headers = lines[0].split(',').map(h => h.trim());
+            if (lines.length < 2) {
+                console.error('CSV file appears to be empty or has no data rows');
+                return [];
+            }
+            
+            // Parse headers
+            const headers = parseCSVLine(lines[0]);
+            console.log('CSV Headers:', headers);
+            
             const data = [];
             
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].split(',').map(v => v.trim());
+                if (lines[i].trim() === '') continue; // Skip empty lines
+                
+                const values = parseCSVLine(lines[i]);
                 if (values.length === headers.length) {
                     const entry = {};
                     headers.forEach((header, index) => {
-                        entry[header] = values[index];
+                        entry[header.trim()] = values[index].trim();
                     });
                     data.push(entry);
+                } else {
+                    console.warn(`Row ${i + 1} has ${values.length} values but expected ${headers.length}:`, lines[i]);
                 }
             }
             
+            console.log('Parsed CSV data sample:', data.slice(0, 3));
+            console.log('Total entries:', data.length);
+            
+            // Log unique categories and rank types for debugging
+            const categories = [...new Set(data.map(d => d.Category))];
+            const rankTypes = [...new Set(data.map(d => d['Rank Category']))];
+            console.log('Available Categories:', categories);
+            console.log('Available Rank Types:', rankTypes);
+            
             return data;
+        }
+        
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        // Handle escaped quotes
+                        current += '"';
+                        i++; // Skip next quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current); // Add the last field
+            return result;
         }
         
         function findEligibleBranches() {
@@ -419,18 +468,41 @@
                 return;
             }
             
+            console.log('Search criteria:', { crlRank, category, rankType, institutePreference });
+            
             // Show loading
             showLoading();
             
-            // Filter data
+            // Filter data with detailed logging
             let filteredData = csvData.filter(entry => {
-                const matchesCategory = entry['Category'] === category;
-                const matchesRankType = entry['Rank Category'] === rankType;
-                const closingRank = parseInt(entry['Closing Rank']);
-                const isEligible = closingRank >= crlRank;
+                const entryCategory = entry['Category'];
+                const entryRankType = entry['Rank Category'];
+                const closingRankStr = entry['Closing Rank'];
+                const closingRank = parseInt(closingRankStr);
+                
+                const matchesCategory = entryCategory === category;
+                const matchesRankType = entryRankType === rankType;
+                const isEligible = !isNaN(closingRank) && closingRank >= crlRank;
+                
+                // Debug logging for first few entries
+                if (csvData.indexOf(entry) < 5) {
+                    console.log(`Entry ${csvData.indexOf(entry)}:`, {
+                        institute: entry['Institute'],
+                        branch: entry['Branch'],
+                        entryCategory,
+                        entryRankType,
+                        closingRankStr,
+                        closingRank,
+                        matchesCategory,
+                        matchesRankType,
+                        isEligible
+                    });
+                }
                 
                 return matchesCategory && matchesRankType && isEligible;
             });
+            
+            console.log('After category/rank type filter:', filteredData.length, 'entries');
             
             // Apply institute preference filter if specified
             if (institutePreference.trim()) {
@@ -444,6 +516,8 @@
                         instituteName.includes(pref) || pref.includes(instituteName)
                     );
                 });
+                
+                console.log('After institute preference filter:', filteredData.length, 'entries');
             }
             
             displayResults(filteredData, crlRank, category, rankType);
@@ -460,7 +534,21 @@
                 resultsContent.innerHTML = `
                     <div class="no-results">
                         <h3>No eligible options found</h3>
-                        <p>Try adjusting your preferences or check if your rank and category are correct.</p>
+                        <p>Based on your search criteria:</p>
+                        <ul style="text-align: left; margin: 10px 0;">
+                            <li><strong>CRL Rank:</strong> ${crlRank}</li>
+                            <li><strong>Category:</strong> ${category}</li>
+                            <li><strong>Rank Type:</strong> ${rankType}</li>
+                        </ul>
+                        <p><strong>Debugging Info:</strong></p>
+                        <p>Total CSV entries loaded: ${csvData.length}</p>
+                        <p>Open browser console (F12) to see detailed filtering information.</p>
+                        <p style="margin-top: 15px;">Try:</p>
+                        <ul style="text-align: left;">
+                            <li>Checking if your CSV has the correct format</li>
+                            <li>Verifying category and rank type match your CSV data</li>
+                            <li>Using a higher rank number for testing</li>
+                        </ul>
                     </div>
                 `;
                 statsSection.style.display = 'none';
